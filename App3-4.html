@@ -1,0 +1,1409 @@
+<!DOCTYPE html><html lang="de"><head><meta name="x-poe-datastore-behavior" content="local_only"><meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://code.jquery.com https://unpkg.com https://d3js.org https://threejs.org https://cdn.plot.ly https://stackpath.bootstrapcdn.com https://maps.googleapis.com https://cdn.tailwindcss.com https://ajax.googleapis.com https://kit.fontawesome.com https://cdn.datatables.net https://maxcdn.bootstrapcdn.com https://code.highcharts.com https://tako-static-assets-production.s3.amazonaws.com https://www.youtube.com https://fonts.googleapis.com https://fonts.gstatic.com https://pfst.cf2.poecdn.net https://puc.poecdn.net https://i.imgur.com https://wikimedia.org https://*.icons8.com https://*.giphy.com https://picsum.photos https://images.unsplash.com; frame-src 'self' https://www.youtube.com https://trytako.com; child-src 'self'; manifest-src 'self'; worker-src 'self'; upgrade-insecure-requests; block-all-mixed-content;">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BA Inventar</title>
+    <script src="https://unpkg.com/@zxing/library@0.18.6/umd/index.min.js"></script>
+    <style>
+        :root {
+            --ba-red: #E2001A;
+            --ba-red-dark: #B80015;
+            --ba-white: #FFFFFF;
+            --ba-gray: #F5F5F5;
+            --ba-text: #333333;
+            --ba-border: #DDDDDD;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--ba-gray);
+            color: var(--ba-text);
+            min-height: 100vh;
+            min-height: 100dvh;
+        }
+
+        .header {
+            background: var(--ba-white);
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--ba-red);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo-icon svg {
+            width: 28px;
+            height: 28px;
+            fill: var(--ba-white);
+        }
+
+        .logo-text {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--ba-text);
+            line-height: 1.2;
+        }
+
+        .logo-text span {
+            display: block;
+            color: var(--ba-red);
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .screen {
+            display: none;
+            padding: 20px;
+            max-width: 500px;
+            margin: 0 auto;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .welcome-screen {
+            text-align: center;
+            padding-top: 60px;
+        }
+
+        .welcome-icon {
+            width: 100px;
+            height: 100px;
+            background: var(--ba-red);
+            border-radius: 20px;
+            margin: 0 auto 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 24px rgba(226, 0, 26, 0.3);
+        }
+
+        .welcome-icon svg {
+            width: 60px;
+            height: 60px;
+            fill: var(--ba-white);
+        }
+
+        h1 {
+            font-size: 24px;
+            color: var(--ba-text);
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 15px;
+            margin-bottom: 40px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 16px 32px;
+            font-size: 17px;
+            font-weight: 600;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
+            max-width: 320px;
+        }
+
+        .btn-primary {
+            background: var(--ba-red);
+            color: var(--ba-white);
+        }
+
+        .btn-primary:hover, .btn-primary:active {
+            background: var(--ba-red-dark);
+            transform: scale(0.98);
+        }
+
+        .btn-secondary {
+            background: var(--ba-white);
+            color: var(--ba-text);
+            border: 2px solid var(--ba-border);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--ba-red);
+            color: var(--ba-red);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--ba-red);
+            border: 2px solid var(--ba-red);
+        }
+
+        .btn-small {
+            padding: 12px 20px;
+            font-size: 15px;
+        }
+
+        .card {
+            background: var(--ba-white);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--ba-text);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 14px 16px;
+            font-size: 16px;
+            border: 2px solid var(--ba-border);
+            border-radius: 10px;
+            transition: border-color 0.2s;
+            background: var(--ba-white);
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--ba-red);
+        }
+
+        .scanner-container {
+            background: #000;
+            border-radius: 16px;
+            overflow: hidden;
+            position: relative;
+            aspect-ratio: 4/3;
+            margin-bottom: 20px;
+        }
+
+        #video-preview {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .scanner-overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+        }
+
+        .scan-frame {
+            width: 70%;
+            height: 50%;
+            border: 3px solid var(--ba-red);
+            border-radius: 12px;
+            position: relative;
+        }
+
+        .scan-frame::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--ba-red);
+            animation: scanLine 2s ease-in-out infinite;
+        }
+
+        @keyframes scanLine {
+            0%, 100% { transform: translateY(-30px); opacity: 0.5; }
+            50% { transform: translateY(30px); opacity: 1; }
+        }
+
+        .scan-status {
+            text-align: center;
+            padding: 16px;
+            background: var(--ba-white);
+            border-radius: 12px;
+            margin-bottom: 16px;
+        }
+
+        .scan-label {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 4px;
+        }
+
+        .scan-category {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--ba-red);
+        }
+
+        .scanned-value {
+            background: #E8F5E9;
+            color: #2E7D32;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 14px;
+            margin-top: 12px;
+            word-break: break-all;
+        }
+
+        .manual-input-toggle {
+            text-align: center;
+            margin-top: 16px;
+        }
+
+        .manual-input-toggle button {
+            background: none;
+            border: none;
+            color: var(--ba-red);
+            font-size: 14px;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        .manual-input-section {
+            display: none;
+            margin-top: 16px;
+        }
+
+        .manual-input-section.active {
+            display: block;
+        }
+
+        .manual-input-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .manual-input-row input {
+            flex: 1;
+        }
+
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .action-buttons .btn {
+            max-width: none;
+        }
+
+        .room-badge {
+            display: inline-block;
+            background: var(--ba-red);
+            color: var(--ba-white);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+
+        .inventory-list {
+            margin-top: 20px;
+        }
+
+        .inventory-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            background: var(--ba-gray);
+            border-radius: 8px;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .inventory-item .category {
+            font-weight: 600;
+            min-width: 120px;
+            color: var(--ba-text);
+        }
+
+        .inventory-item .barcode {
+            font-family: monospace;
+            color: #666;
+            flex: 1;
+            word-break: break-all;
+        }
+
+        .inventory-item .item-actions {
+            display: flex;
+            gap: 4px;
+            flex-shrink: 0;
+        }
+
+        .inventory-item .edit-btn,
+        .inventory-item .remove-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 6px 8px;
+            font-size: 16px;
+            border-radius: 6px;
+            transition: background 0.15s;
+        }
+
+        .inventory-item .edit-btn {
+            color: #1976D2;
+        }
+
+        .inventory-item .edit-btn:hover {
+            background: rgba(25, 118, 210, 0.1);
+        }
+
+        .inventory-item .remove-btn {
+            color: var(--ba-red);
+        }
+
+        .inventory-item .remove-btn:hover {
+            background: rgba(226, 0, 26, 0.1);
+        }
+
+        .summary-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            margin-top: 16px;
+        }
+
+        .summary-table th, .summary-table td {
+            padding: 10px 8px;
+            text-align: left;
+            border-bottom: 1px solid var(--ba-border);
+        }
+
+        .summary-table th {
+            background: var(--ba-red);
+            color: var(--ba-white);
+            font-weight: 600;
+        }
+
+        .summary-table th:first-child {
+            border-radius: 8px 0 0 0;
+        }
+
+        .summary-table th:last-child {
+            border-radius: 0 8px 0 0;
+        }
+
+        .summary-table td {
+            background: var(--ba-white);
+            font-family: monospace;
+            font-size: 11px;
+            word-break: break-all;
+        }
+
+        .summary-table tr:nth-child(even) td {
+            background: var(--ba-gray);
+        }
+
+        .info-box {
+            background: #FFF3E0;
+            border-left: 4px solid #FF9800;
+            padding: 14px;
+            border-radius: 0 8px 8px 0;
+            margin-bottom: 20px;
+            font-size: 14px;
+            color: #E65100;
+        }
+
+        .success-box {
+            background: #E8F5E9;
+            border-left: 4px solid #4CAF50;
+            padding: 14px;
+            border-radius: 0 8px 8px 0;
+            margin-bottom: 20px;
+            font-size: 14px;
+            color: #2E7D32;
+        }
+
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .step-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--ba-border);
+        }
+
+        .step-dot.active {
+            background: var(--ba-red);
+        }
+
+        .step-dot.done {
+            background: #4CAF50;
+        }
+
+        .skip-btn {
+            background: none;
+            border: none;
+            color: #666;
+            font-size: 14px;
+            cursor: pointer;
+            margin-top: 10px;
+            text-decoration: underline;
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--ba-white);
+            border-radius: 16px;
+            padding: 24px;
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .modal h3 {
+            font-size: 18px;
+            margin-bottom: 12px;
+        }
+
+        .modal p {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+        }
+
+        .modal-buttons .btn {
+            flex: 1;
+        }
+
+        .back-btn {
+            background: none;
+            border: none;
+            color: var(--ba-red);
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 20px;
+        }
+
+        .current-info {
+            background: linear-gradient(135deg, var(--ba-red), var(--ba-red-dark));
+            color: var(--ba-white);
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .current-info .label {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        .current-info .value {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .current-info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .camera-error {
+            padding: 40px 20px;
+            text-align: center;
+            color: #666;
+        }
+
+        .camera-error svg {
+            width: 60px;
+            height: 60px;
+            fill: #999;
+            margin-bottom: 16px;
+        }
+
+        @media (max-width: 360px) {
+            .header {
+                padding: 12px 16px;
+            }
+            .logo-text {
+                font-size: 12px;
+            }
+            .logo-text span {
+                font-size: 10px;
+            }
+            .card {
+                padding: 16px;
+            }
+            .summary-table {
+                font-size: 11px;
+            }
+            .summary-table th, .summary-table td {
+                padding: 8px 4px;
+            }
+        }
+
+        .dark {
+            --ba-gray: #1A1A1A;
+            --ba-text: #F5F5F5;
+            --ba-border: #333333;
+        }
+
+        .dark .header {
+            background: #222;
+        }
+
+        .dark .card {
+            background: #222;
+        }
+
+        .dark .form-group input {
+            background: #333;
+            color: #F5F5F5;
+        }
+
+        .dark .inventory-item {
+            background: #333;
+        }
+
+        .dark .summary-table td {
+            background: #222;
+        }
+
+        .dark .summary-table tr:nth-child(even) td {
+            background: #333;
+        }
+
+        .dark .btn-secondary {
+            background: #333;
+            color: #F5F5F5;
+            border-color: #444;
+        }
+
+        .dark .scan-status {
+            background: #222;
+        }
+
+        .dark .modal {
+            background: #222;
+        }
+
+        .dark .modal p {
+            color: #AAA;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="logo">
+            <div class="logo-icon">
+                <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"></path></svg>
+            </div>
+            <div class="logo-text">
+                Bundesagentur für Arbeit
+                <span>IT-Inventar</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Welcome Screen -->
+    <div id="welcome-screen" class="screen welcome-screen active">
+        <div class="welcome-icon">
+            <svg viewBox="0 0 24 24"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9h-4v4h-2v-4H9V9h4V5h2v4h4v2z"></path></svg>
+        </div>
+        <h1>IT-Inventarisierung</h1>
+        <p class="subtitle">Erfassen Sie Hardware-Barcodes und erstellen Sie Inventarlisten</p>
+        <button class="btn btn-primary" onclick="showScreen('setup-screen')">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"></path></svg>
+            Neue Liste erstellen
+        </button>
+    </div>
+
+    <!-- Setup Screen -->
+    <div id="setup-screen" class="screen">
+        <button class="back-btn" onclick="showScreen('welcome-screen')">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"></path></svg>
+            Zurück
+        </button>
+        <div class="card">
+            <h2 class="card-title">Neue Inventarliste</h2>
+            <div class="form-group">
+                <label for="technician-name">Name des Technikers *</label>
+                <input type="text" id="technician-name" placeholder="Max Mustermann" required="" autocomplete="off" autocorrect="off" autocapitalize="off" data-lpignore="true" data-form-type="other">
+            </div>
+            <div class="form-group">
+                <label for="property-name">Name der Liegenschaft *</label>
+                <input type="text" id="property-name" placeholder="z.B. Agentur München" required="" autocomplete="off" autocorrect="off" data-lpignore="true" data-form-type="other">
+            </div>
+            <button class="btn btn-primary" onclick="startInventory()">Weiter</button>
+        </div>
+    </div>
+
+    <!-- Room Entry Screen -->
+    <div id="room-screen" class="screen">
+        <button class="back-btn" onclick="showScreen('setup-screen')">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"></path></svg>
+            Zurück
+        </button>
+        <div class="current-info">
+            <div class="label">Liegenschaft</div>
+            <div class="value" id="display-property"></div>
+        </div>
+        <div class="card">
+            <h2 class="card-title">Raum eingeben</h2>
+            <div class="form-group">
+                <label for="room-number">Raumnummer *</label>
+                <input type="text" id="room-number" placeholder="z.B. 1.OG-105" autocomplete="off" autocorrect="off" data-lpignore="true" data-form-type="other">
+            </div>
+            <button class="btn btn-primary" onclick="startRoomScan()">Scannen starten</button>
+        </div>
+    </div>
+
+    <!-- Scanner Screen -->
+    <div id="scanner-screen" class="screen">
+        <button class="back-btn" onclick="goBackFromScanner()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"></path></svg>
+            <span id="scanner-back-label">Zurück</span>
+        </button>
+        <div class="current-info">
+            <div class="current-info-grid">
+                <div>
+                    <div class="label">Liegenschaft</div>
+                    <div class="value" id="scan-property"></div>
+                </div>
+                <div>
+                    <div class="label">Raum</div>
+                    <div class="value" id="scan-room"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="step-indicator" id="step-indicator"></div>
+
+        <div class="scan-status">
+            <div class="scan-label">Jetzt scannen:</div>
+            <div class="scan-category" id="current-category">Mini-PC / MAP</div>
+            <div id="scanned-display"></div>
+        </div>
+
+        <div id="barcode-mode">
+            <div class="scanner-container">
+                <video id="video-preview" autoplay="" playsinline="" muted=""></video>
+                <div class="scanner-overlay">
+                    <div class="scan-frame"></div>
+                </div>
+                <div id="camera-error" class="camera-error" style="display:none;">
+                    <svg viewBox="0 0 24 24"><path d="M18 10.48V6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-4.48l4 3.98v-11l-4 3.98zM16 18H4V6h12v12z"></path></svg>
+                    <p>Kamera nicht verfügbar</p>
+                    <p style="font-size:12px;">Bitte nutzen Sie die manuelle Eingabe</p>
+                </div>
+            </div>
+
+            <div class="manual-input-toggle">
+                <button onclick="toggleManualInput()">Manuelle Eingabe</button>
+            </div>
+
+            <div id="manual-input-section" class="manual-input-section">
+                <div class="manual-input-row">
+                    <input type="text" id="manual-barcode" placeholder="Barcode eingeben" autocomplete="off" autocorrect="off" data-lpignore="true" data-form-type="other">
+                    <button class="btn btn-primary btn-small" onclick="submitManualBarcode()">OK</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="text-mode" style="display:none;">
+            <div class="card">
+                <div class="form-group" style="margin-bottom:0;">
+                    <label for="text-mode-input" id="text-mode-label">Name eingeben</label>
+                    <input type="text" id="text-mode-input" placeholder="Name des Anwenders (optional)" autocomplete="off" autocorrect="off" autocapitalize="off" data-lpignore="true" data-form-type="other">
+                </div>
+                <div style="margin-top:16px;">
+                    <button class="btn btn-primary" onclick="submitTextInput()">Übernehmen</button>
+                </div>
+            </div>
+        </div>
+
+        <button class="skip-btn" onclick="skipCategory()">Überspringen →</button>
+    </div>
+
+    <!-- Action Screen -->
+    <div id="action-screen" class="screen">
+        <div class="current-info">
+            <div class="current-info-grid">
+                <div>
+                    <div class="label">Liegenschaft</div>
+                    <div class="value" id="action-property"></div>
+                </div>
+                <div>
+                    <div class="label">Raum</div>
+                    <div class="value" id="action-room"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2 class="card-title">Raum-Übersicht</h2>
+            <div class="success-box" id="last-scanned-info"></div>
+
+            <div class="inventory-list" id="room-inventory"></div>
+        </div>
+
+        <div class="action-buttons">
+            <button class="btn btn-primary" onclick="nextObject()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"></path></svg>
+                Nächstes Objekt
+            </button>
+            <button class="btn btn-secondary" onclick="nextRoom()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M19 19V5c0-1.1-.9-2-2-2H7c-1.1 0-2 .9-2 2v14H3v2h18v-2h-2zm-4 0H9V5h6v14z"></path></svg>
+                Nächster Raum
+            </button>
+            <button class="btn btn-outline" onclick="confirmEndList()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"></path></svg>
+                Liste beenden
+            </button>
+        </div>
+    </div>
+
+    <!-- Summary Screen -->
+    <div id="summary-screen" class="screen">
+        <div class="card">
+            <h2 class="card-title">Inventarliste abgeschlossen</h2>
+            <div class="success-box">
+                <strong>Erfolgreich!</strong><br>
+                <span id="summary-stats"></span>
+            </div>
+
+            <div style="overflow-x:auto;">
+                <table class="summary-table" id="summary-table"></table>
+            </div>
+        </div>
+
+        <div class="action-buttons">
+            <button class="btn btn-primary" onclick="downloadCSV()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path></svg>
+                CSV herunterladen
+            </button>
+            <button class="btn btn-secondary" onclick="startNewList()">Neue Liste starten</button>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirm-modal" class="modal-overlay">
+        <div class="modal">
+            <h3 id="modal-title">Liste beenden?</h3>
+            <p id="modal-message">Sind Sie sicher, dass Sie die Liste abschließen möchten?</p>
+            <div class="modal-buttons">
+                <button class="btn btn-secondary btn-small" onclick="closeModal()">Abbrechen</button>
+                <button class="btn btn-primary btn-small" id="modal-confirm-btn">Bestätigen</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Dark mode detection
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+
+        // App State
+        const state = {
+            technicianName: '',
+            propertyName: '',
+            currentRoom: '',
+            currentCategoryIndex: 0,
+            rooms: {},
+            codeReader: null,
+            videoStream: null,
+            scanActive: false
+        };
+
+        const categories = [
+            { id: 'minipc', name: 'Mini-PC / MAP', required: true, type: 'barcode' },
+            { id: 'docking', name: 'Dockingstation', required: false, type: 'barcode' },
+            { id: 'monitor', name: 'Monitor', required: false, type: 'barcode' },
+            { id: 'monitor2', name: 'Zweitmonitor', required: false, type: 'barcode' },
+            { id: 'other', name: 'Sonstige Objekte', required: false, type: 'barcode' },
+            { id: 'anwender', name: 'Anwender', required: false, type: 'text' }
+        ];
+
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+
+            // Pause scanning when leaving scanner screen
+            if (screenId !== 'scanner-screen') {
+                state.scanActive = false;
+            }
+
+            // Fully release camera when leaving the scan flow
+            if (screenId !== 'scanner-screen' && screenId !== 'action-screen') {
+                stopCameraCompletely();
+            }
+        }
+
+        function goBackFromScanner() {
+            state.scanActive = false;
+            if (state.currentCategoryIndex > 0) {
+                state.currentCategoryIndex--;
+                updateScannerUI();
+                startScanner();
+            } else {
+                showScreen('room-screen');
+            }
+        }
+
+        function rescanCategory(categoryId) {
+            // Find the index of this category and jump to it in scanner
+            const idx = categories.findIndex(c => c.id === categoryId);
+            if (idx !== -1) {
+                state.rooms[state.currentRoom][categoryId] = '';
+                state.currentCategoryIndex = idx;
+
+                document.getElementById('scan-property').textContent = state.propertyName;
+                document.getElementById('scan-room').textContent = state.currentRoom;
+
+                updateScannerUI();
+                showScreen('scanner-screen');
+                startScanner();
+            }
+        }
+
+        function startInventory() {
+            const name = document.getElementById('technician-name').value.trim();
+            const property = document.getElementById('property-name').value.trim();
+
+            if (!name || !property) {
+                showNotification('Bitte alle Felder ausfüllen', 'error');
+                return;
+            }
+
+            state.technicianName = name;
+            state.propertyName = property;
+            state.rooms = {};
+
+            document.getElementById('display-property').textContent = property;
+            showScreen('room-screen');
+        }
+
+        function startRoomScan() {
+            const room = document.getElementById('room-number').value.trim();
+            if (!room) {
+                showNotification('Bitte Raumnummer eingeben', 'error');
+                return;
+            }
+
+            state.currentRoom = room;
+            state.currentCategoryIndex = 0;
+
+            if (!state.rooms[room]) {
+                state.rooms[room] = {
+                    minipc: '',
+                    docking: '',
+                    monitor: '',
+                    monitor2: '',
+                    other: '',
+                    anwender: ''
+                };
+            }
+
+            document.getElementById('scan-property').textContent = state.propertyName;
+            document.getElementById('scan-room').textContent = room;
+            document.getElementById('action-property').textContent = state.propertyName;
+            document.getElementById('action-room').textContent = room;
+
+            updateScannerUI();
+            showScreen('scanner-screen');
+            startScanner();
+        }
+
+        function updateScannerUI() {
+            const category = categories[state.currentCategoryIndex];
+            document.getElementById('current-category').textContent = category.name;
+            document.getElementById('scanned-display').innerHTML = '';
+
+            // Toggle barcode vs text mode
+            var barcodeMode = document.getElementById('barcode-mode');
+            var textMode = document.getElementById('text-mode');
+
+            if (category.type === 'text') {
+                state.scanActive = false;
+                barcodeMode.style.display = 'none';
+                textMode.style.display = 'block';
+                document.getElementById('text-mode-input').value = state.rooms[state.currentRoom][category.id] || '';
+                document.getElementById('text-mode-input').placeholder = 'Name des Anwenders (optional)';
+                document.getElementById('text-mode-label').textContent = 'Anwender-Name eingeben';
+                setTimeout(function() {
+                    document.getElementById('text-mode-input').focus();
+                }, 100);
+            } else {
+                barcodeMode.style.display = 'block';
+                textMode.style.display = 'none';
+                document.getElementById('manual-barcode').value = '';
+                document.getElementById('manual-input-section').classList.remove('active');
+            }
+
+            // Update back label
+            if (state.currentCategoryIndex > 0) {
+                const prevCat = categories[state.currentCategoryIndex - 1];
+                document.getElementById('scanner-back-label').textContent = 'Zurück zu ' + prevCat.name;
+            } else {
+                document.getElementById('scanner-back-label').textContent = 'Zurück zur Raumauswahl';
+            }
+
+            // Update step indicator
+            const stepHtml = categories.map((cat, i) => {
+                let cls = 'step-dot';
+                if (i < state.currentCategoryIndex) cls += ' done';
+                else if (i === state.currentCategoryIndex) cls += ' active';
+                return `<div class="${cls}"></div>`;
+            }).join('');
+            document.getElementById('step-indicator').innerHTML = stepHtml;
+        }
+
+        function submitTextInput() {
+            var value = document.getElementById('text-mode-input').value.trim();
+            var category = categories[state.currentCategoryIndex];
+            state.rooms[state.currentRoom][category.id] = value;
+
+            document.getElementById('scanned-display').innerHTML =
+                value ? '<div class="scanned-value">✓ ' + value + '</div>' : '';
+
+            showActionScreen(category.name, value || '(leer)');
+        }
+
+        async function startScanner() {
+            // Don't start camera for text-type categories
+            var category = categories[state.currentCategoryIndex];
+            if (category.type === 'text') {
+                state.scanActive = false;
+                return;
+            }
+
+            var videoElement = document.getElementById('video-preview');
+            var errorElement = document.getElementById('camera-error');
+
+            // If camera is already running, just reactivate scanning
+            if (state.videoStream && state.codeReader) {
+                state.scanActive = true;
+                videoElement.style.display = 'block';
+                errorElement.style.display = 'none';
+                return;
+            }
+
+            // Step 1: Acquire camera stream manually first (iOS Safari needs this)
+            try {
+                state.videoStream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        facingMode: { ideal: 'environment' },
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    },
+                    audio: false
+                });
+
+                // Step 2: Attach stream to video element
+                videoElement.srcObject = state.videoStream;
+                videoElement.setAttribute('autoplay', 'true');
+                videoElement.setAttribute('playsinline', 'true');
+                videoElement.setAttribute('muted', 'true');
+                await videoElement.play();
+
+                videoElement.style.display = 'block';
+                errorElement.style.display = 'none';
+
+                // Step 3: Start ZXing decoding on the existing stream
+                state.codeReader = new ZXing.BrowserMultiFormatReader();
+                state.scanActive = true;
+
+                // ZXing continuous decode from the video element
+                state.codeReader.decodeFromVideoElementContinuously(videoElement, function(result) {
+                    if (result && state.scanActive) {
+                        handleBarcodeScan(result.text);
+                    }
+                });
+
+            } catch (err) {
+                var errMsg = String(err);
+                console.log('Camera error: ' + errMsg);
+                videoElement.style.display = 'none';
+                errorElement.style.display = 'block';
+
+                // Show specific error message for iOS
+                var errorText = errorElement.querySelector('p');
+                if (errMsg.indexOf('NotAllowed') !== -1 || errMsg.indexOf('Permission') !== -1) {
+                    errorText.textContent = 'Kamera-Zugriff verweigert';
+                    errorElement.querySelector('p:last-child').textContent =
+                        'Bitte erlauben Sie den Kamera-Zugriff in Ihren iPhone-Einstellungen: Einstellungen → Safari → Kamera → Erlauben';
+                } else if (errMsg.indexOf('NotFound') !== -1) {
+                    errorText.textContent = 'Keine Kamera gefunden';
+                } else if (errMsg.indexOf('NotReadable') !== -1 || errMsg.indexOf('AbortError') !== -1) {
+                    errorText.textContent = 'Kamera wird von einer anderen App verwendet';
+                }
+            }
+        }
+
+        // Pause scanning without releasing camera
+        function stopScanner() {
+            state.scanActive = false;
+        }
+
+        // Fully release camera and all resources
+        function stopCameraCompletely() {
+            state.scanActive = false;
+            if (state.codeReader) {
+                try { state.codeReader.reset(); } catch (e) { /* ignore */ }
+                state.codeReader = null;
+            }
+            if (state.videoStream) {
+                state.videoStream.getTracks().forEach(function(track) {
+                    track.stop();
+                });
+                state.videoStream = null;
+            }
+            var videoElement = document.getElementById('video-preview');
+            if (videoElement) {
+                videoElement.srcObject = null;
+            }
+        }
+
+        function handleBarcodeScan(barcode) {
+            if (!barcode) return;
+
+            // Pause scanning (camera stays active)
+            state.scanActive = false;
+
+            var category = categories[state.currentCategoryIndex];
+            state.rooms[state.currentRoom][category.id] = barcode;
+
+            document.getElementById('scanned-display').innerHTML =
+                '<div class="scanned-value">\u2713 ' + barcode + '</div>';
+
+            setTimeout(function() {
+                showActionScreen(category.name, barcode);
+            }, 500);
+        }
+
+        function toggleManualInput() {
+            const section = document.getElementById('manual-input-section');
+            section.classList.toggle('active');
+            if (section.classList.contains('active')) {
+                document.getElementById('manual-barcode').focus();
+            }
+        }
+
+        function submitManualBarcode() {
+            const barcode = document.getElementById('manual-barcode').value.trim();
+            if (barcode) {
+                handleBarcodeScan(barcode);
+            }
+        }
+
+        function skipCategory() {
+            const category = categories[state.currentCategoryIndex];
+            state.rooms[state.currentRoom][category.id] = '';
+
+            state.currentCategoryIndex++;
+
+            if (state.currentCategoryIndex >= categories.length) {
+                showActionScreen('', '', true);
+            } else {
+                updateScannerUI();
+                startScanner();
+            }
+        }
+
+        function showActionScreen(categoryName, barcode, skipped = false) {
+            state.scanActive = false;
+
+            if (skipped) {
+                document.getElementById('last-scanned-info').innerHTML =
+                    '<strong>Alle Kategorien durchlaufen</strong><br>Raum ' + state.currentRoom + ' abgeschlossen.';
+            } else {
+                document.getElementById('last-scanned-info').innerHTML =
+                    '<strong>' + categoryName + '</strong><br>Barcode: ' + barcode;
+            }
+
+            // Show room inventory with edit & delete buttons
+            const roomData = state.rooms[state.currentRoom];
+            let inventoryHtml = '';
+            categories.forEach(function(cat) {
+                const val = roomData[cat.id];
+                const statusIcon = val ? '✓' : '–';
+                const statusClass = val ? 'color:#2E7D32' : 'color:#999';
+                inventoryHtml +=
+                    '<div class="inventory-item">' +
+                        '<span class="category" style="' + statusClass + '">' + statusIcon + ' ' + cat.name + '</span>' +
+                        '<span class="barcode">' + (val || '<em style="color:#999">leer</em>') + '</span>' +
+                        '<span class="item-actions">' +
+                            '<button class="edit-btn" onclick="rescanCategory(\'' + cat.id + '\')" title="Neu scannen">&#9998;</button>' +
+                            (val ? '<button class="remove-btn" onclick="removeItem(\'' + cat.id + '\')" title="Löschen">&times;</button>' : '') +
+                        '</span>' +
+                    '</div>';
+            });
+            document.getElementById('room-inventory').innerHTML = inventoryHtml;
+
+            showScreen('action-screen');
+        }
+
+        function removeItem(categoryId) {
+            state.rooms[state.currentRoom][categoryId] = '';
+            showActionScreen('', '', true);
+        }
+
+        function nextObject() {
+            state.currentCategoryIndex++;
+
+            if (state.currentCategoryIndex >= categories.length) {
+                state.currentCategoryIndex = 0;
+            }
+
+            updateScannerUI();
+            showScreen('scanner-screen');
+            startScanner();
+        }
+
+        function nextRoom() {
+            stopScanner();
+            document.getElementById('room-number').value = '';
+            showScreen('room-screen');
+        }
+
+        function confirmEndList() {
+            document.getElementById('modal-title').textContent = 'Liste beenden?';
+            document.getElementById('modal-message').textContent =
+                `Die Inventarliste enthält ${Object.keys(state.rooms).length} Räume. Möchten Sie die Liste abschließen und als CSV exportieren?`;
+            document.getElementById('modal-confirm-btn').onclick = endList;
+            document.getElementById('confirm-modal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('confirm-modal').classList.remove('active');
+        }
+
+        function endList() {
+            closeModal();
+            stopCameraCompletely();
+            generateSummary();
+            showScreen('summary-screen');
+        }
+
+        function generateSummary() {
+            const roomCount = Object.keys(state.rooms).length;
+            let objectCount = 0;
+
+            Object.values(state.rooms).forEach(room => {
+                Object.values(room).forEach(val => {
+                    if (val) objectCount++;
+                });
+            });
+
+            document.getElementById('summary-stats').textContent =
+                `${roomCount} Räume, ${objectCount} Objekte erfasst`;
+
+            // Generate table
+            let tableHtml = `
+                <thead>
+                    <tr>
+                        <th>Raum</th>
+                        <th>PC/MAP</th>
+                        <th>Docking</th>
+                        <th>Monitor</th>
+                        <th>Monitor 2</th>
+                        <th>Sonstiges</th>
+                        <th>Anwender</th>
+                    </tr>
+                </thead>
+                <tbody>
+            `;
+
+            Object.entries(state.rooms).forEach(([room, data]) => {
+                tableHtml += `
+                    <tr>
+                        <td><strong>${room}</strong></td>
+                        <td>${data.minipc || '-'}</td>
+                        <td>${data.docking || '-'}</td>
+                        <td>${data.monitor || '-'}</td>
+                        <td>${data.monitor2 || '-'}</td>
+                        <td>${data.other || '-'}</td>
+                        <td>${data.anwender || '-'}</td>
+                    </tr>
+                `;
+            });
+
+            tableHtml += '</tbody>';
+            document.getElementById('summary-table').innerHTML = tableHtml;
+        }
+
+        function downloadCSV() {
+            var date = new Date().toISOString().split('T')[0];
+            var safeName = state.propertyName.replace(/[^a-zA-Z0-9äöüÄÖÜß]/g, '_');
+            var filename = 'Inventar_' + safeName + '_' + date + '.csv';
+
+            // BOM for Excel UTF-8 compatibility
+            var csv = '\uFEFF';
+
+            // === Header block (metadata, clearly separated) ===
+            csv += 'Inventarliste;' + state.propertyName + ';;;;;\n';
+            csv += 'Techniker;' + state.technicianName + ';;;;;\n';
+            csv += 'Datum;' + new Date().toLocaleDateString('de-DE') + ';;;;;\n';
+            csv += ';;;;;;\n';
+            csv += ';;;;;;\n';
+
+            // === Data table (only rooms + components + Anwender) ===
+            csv += 'Raum;PC/MAP;Dockingstation;Monitor;Zweitmonitor;Sonstiges;Anwender\n';
+
+            Object.entries(state.rooms).forEach(function(entry) {
+                var room = entry[0];
+                var data = entry[1];
+                csv += room + ';' + data.minipc + ';' + data.docking + ';' + data.monitor + ';' + data.monitor2 + ';' + data.other + ';' + data.anwender + '\n';
+            });
+
+            var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            var url = URL.createObjectURL(blob);
+            var link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            link.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function startNewList() {
+            state.technicianName = '';
+            state.propertyName = '';
+            state.currentRoom = '';
+            state.currentCategoryIndex = 0;
+            state.rooms = {};
+
+            document.getElementById('technician-name').value = '';
+            document.getElementById('property-name').value = '';
+            document.getElementById('room-number').value = '';
+            document.getElementById('text-mode-input').value = '';
+
+            showScreen('welcome-screen');
+        }
+
+        function showNotification(message, type = 'info') {
+            const existing = document.querySelector('.notification');
+            if (existing) existing.remove();
+
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            notification.style.cssText = `
+                position: fixed;
+                top: 80px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: ${type === 'error' ? '#E2001A' : '#4CAF50'};
+                color: white;
+                padding: 12px 24px;
+                border-radius: 8px;
+                font-size: 14px;
+                z-index: 300;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+
+            setTimeout(() => notification.remove(), 3000);
+        }
+
+        // Handle Enter key in manual input
+        document.getElementById('manual-barcode').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                submitManualBarcode();
+            }
+        });
+
+        document.getElementById('room-number').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                startRoomScan();
+            }
+        });
+
+        document.getElementById('text-mode-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                submitTextInput();
+            }
+        });
+    </script>
+
+
+</body></html>
